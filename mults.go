@@ -33,6 +33,9 @@ func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 		ts.vnames = make([]string, nvar)
 		copy(ts.vnames, vnames)
 	}
+	ts.dep = []int{}
+	ts.indep = []int{}
+
 	return nil
 }
 
@@ -106,4 +109,19 @@ func (ts *MulTS) SetLag(k int) error {
 	ts.lag = k
 
 	return nil
+}
+
+// SetDepByCol sets the lag length
+func (ts *MulTS) SetDepByCol(deps ...int) {
+	var nvar = len(ts.data)
+
+	for dep := range deps {
+		if dep < 0 || dep >= nvar {
+			continue
+		}
+
+		if !contains(ts.dep, dep) {
+			ts.dep = append(ts.dep, dep)
+		}
+	}
 }
