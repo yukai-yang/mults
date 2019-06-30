@@ -4,11 +4,11 @@ import "errors"
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
-	data      [][]float64
-	iTT       int
-	freq      int
-	rows      [][]int
-	vnames    []string
+	data      [][]float64 // SetData
+	iTT       int         // SetData
+	freq      int         // SetFreq
+	rows      [][]int     // SetFreq
+	vnames    []string    // SetData, SetNames
 	laglength int
 	dep       []int
 	indep     []int
@@ -21,7 +21,7 @@ type MulTS struct {
 func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 	var iTT = len(data) / nvar
 	if iTT*nvar != len(data) {
-		return errors.New("dimension does not fit")
+		return errors.New("data quantity does not fit")
 	}
 	ts.iTT = iTT
 	ts.data = make([][]float64, nvar)
@@ -33,6 +33,24 @@ func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 		ts.vnames = make([]string, nvar)
 		copy(ts.vnames, vnames)
 	}
+	return nil
+}
+
+// SetNames sets the names of the variables
+func (ts *MulTS) SetNames(vnames []string) error {
+	if vnames == nil {
+		return errors.New("names empty")
+	}
+	if ts.data == nil {
+		return errors.New("no data")
+	}
+	if len(vnames) != len(ts.data) {
+		return errors.New("variables number does not fit")
+	}
+
+	ts.vnames = make([]string, len(ts.data))
+	copy(ts.vnames, vnames)
+
 	return nil
 }
 
