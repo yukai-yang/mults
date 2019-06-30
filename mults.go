@@ -10,7 +10,7 @@ type MulTS struct {
 	rows   [][]int     // SetFreq
 	vnames []string    // SetData, SetNames
 	lag    int         // SetLag
-	dep    []int
+	dep    []int       // SetDepByCol, SetDepByName
 	indep  []int
 }
 
@@ -111,17 +111,46 @@ func (ts *MulTS) SetLag(k int) error {
 	return nil
 }
 
-// SetDepByCol sets the lag length
-func (ts *MulTS) SetDepByCol(deps ...int) {
+// SetDepByCol sets dependent variables by column numbers
+func (ts *MulTS) SetDepByCol(deps []int, app bool) error {
 	var nvar = len(ts.data)
+	if !app {
+		// not append
+		ts.dep = []int{}
+	}
 
 	for dep := range deps {
 		if dep < 0 || dep >= nvar {
 			continue
 		}
 
-		if !contains(ts.dep, dep) {
+		if !containsint(ts.dep, dep) {
 			ts.dep = append(ts.dep, dep)
 		}
 	}
+
+	return nil
+}
+
+// SetDepByName appends dependent variables by variable names
+func (ts *MulTS) SetDepByName(deps []string, app bool) error {
+	if ts.vnames == nil {
+		return errors.New("variables have no names")
+	}
+
+	if !app {
+		// not append
+		ts.dep = []int{}
+	}
+
+	for _, dep := range deps {
+		for _, v := range ts.dep {
+			if dep == ts.vnames[v] && !containsint(ts.dep, v) {
+				ts.dep = append(ts.dep, v)
+				break
+			}
+		}
+	}
+
+	return nil
 }
