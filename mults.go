@@ -11,7 +11,7 @@ type MulTS struct {
 	vnames []string    // SetData, SetNames
 	lag    int         // SetLag
 	dep    []int       // SetDepByCol, SetDepByName
-	indep  []int
+	indep  []int       // SetIndepByCol
 }
 
 // SetData sets the data, start, end and frequency
@@ -149,6 +149,27 @@ func (ts *MulTS) SetDepByName(deps []string, app bool) error {
 				ts.dep = append(ts.dep, v)
 				break
 			}
+		}
+	}
+
+	return nil
+}
+
+// SetIndepByCol sets independent variables by column numbers
+func (ts *MulTS) SetIndepByCol(indeps []int, app bool) error {
+	var nvar = len(ts.data)
+	if !app {
+		// not append
+		ts.indep = []int{}
+	}
+
+	for indep := range indeps {
+		if indep < 0 || indep >= nvar {
+			continue
+		}
+
+		if !containsint(ts.indep, indep) {
+			ts.dep = append(ts.indep, indep)
 		}
 	}
 
