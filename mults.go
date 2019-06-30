@@ -2,13 +2,11 @@ package mults
 
 import (
 	"errors"
-
-	"gonum.org/v1/gonum/mat"
 )
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
-	data      *mat.Dense
+	data      [][]float64
 	freq      int
 	start     [2]int
 	end       [2]int
@@ -27,13 +25,15 @@ func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 	if iTT*nvar != len(data) {
 		return errors.New("dimension does not fit")
 	}
-	ts.data = mat.NewDense(iTT, nvar, data)
-
+	ts.data = make([][]float64, nvar)
+	for i := 0; i < nvar; i++ {
+		ts.data[i] = make([]float64, iTT)
+		copy(ts.data[i], data[i*iTT:(i*iTT+iTT)])
+	}
 	if vnames != nil && len(vnames) == nvar {
 		ts.vnames = make([]string, nvar)
 		copy(ts.vnames, vnames)
 	}
-
 	return nil
 }
 
