@@ -39,6 +39,12 @@ func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 
 // SetFreq sets the frequency of the time series
 // start and end are 2-slices of int representing the start and end time points
+// if start and/or end are nil, they will be inferred
 func (ts *MulTS) SetFreq(freq int, start, end [2]int) error {
+	if freq < 1 {
+		return errors.New("wrong frequency")
+	}
+	ts.freq = freq
+
 	return nil
 }
