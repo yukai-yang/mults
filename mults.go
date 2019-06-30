@@ -4,14 +4,14 @@ import "errors"
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
-	data      [][]float64 // SetData
-	iTT       int         // SetData
-	freq      int         // SetFreq
-	rows      [][]int     // SetFreq
-	vnames    []string    // SetData, SetNames
-	laglength int
-	dep       []int
-	indep     []int
+	data   [][]float64 // SetData
+	iTT    int         // SetData
+	freq   int         // SetFreq
+	rows   [][]int     // SetFreq
+	vnames []string    // SetData, SetNames
+	lag    int         // SetLag
+	dep    []int
+	indep  []int
 }
 
 // SetData sets the data, start, end and frequency
@@ -94,6 +94,16 @@ func (ts *MulTS) SetFreq(freq int, start, end []int) error {
 	}
 
 	ts.freq = freq
+
+	return nil
+}
+
+// SetLag sets the lag length
+func (ts *MulTS) SetLag(k int) error {
+	if k < 0 || k >= ts.iTT {
+		return errors.New("invalid lag length")
+	}
+	ts.lag = k
 
 	return nil
 }
