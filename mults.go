@@ -1,8 +1,6 @@
 package mults
 
-import (
-	"errors"
-)
+import "errors"
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
