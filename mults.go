@@ -8,6 +8,7 @@ import (
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
+	// contains filtered or unexported fields
 	data   [][]float64 // SetData
 	iTT    int         // SetData
 	freq   int         // SetFreq
