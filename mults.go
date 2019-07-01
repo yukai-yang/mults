@@ -204,11 +204,38 @@ func (ts *MulTS) SetIndepByName(indeps []string, app bool) error {
 }
 
 // DepVars returns a matrix containing the dependent variables
-func (ts MulTS) DepVars() *mat.Dense {
-	return nil
+// subset from "from" to but without "to"
+func (ts MulTS) DepVars(from, to int) ([][]float64, error) {
+	if ts.data == nil {
+		return nil, errors.New("no data")
+	}
+	if len(ts.dep) == 0 {
+		return nil, errors.New("no dependent variable")
+	}
+	if from < 0 || from >= to || to > ts.iTT {
+		return nil, errors.New("invalid from or to")
+	}
+
+	var dep = make([][]float64, len(ts.dep))
+	for i, v := range ts.dep {
+		dep[i] = make([]float64, to-from)
+		copy(dep[i], ts.data[v][from:to])
+	}
+
+	return dep, nil
 }
 
 // IndepVars returns a matrix containing the independent variables
-func (ts MulTS) IndepVars() *mat.Dense {
-	return nil
+func (ts MulTS) IndepVars(from, to int) (*mat.Dense, error) {
+	if ts.data == nil {
+		return nil, errors.New("no data")
+	}
+	if len(ts.indep) == 0 {
+		return nil, errors.New("no independent variable")
+	}
+	if from < 0 || from > to || to >= ts.iTT {
+		return nil, errors.New("invalid from or to")
+	}
+
+	return nil, nil
 }
