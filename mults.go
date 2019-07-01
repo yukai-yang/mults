@@ -1,10 +1,6 @@
 package mults
 
-import (
-	"errors"
-
-	"gonum.org/v1/gonum/mat"
-)
+import "errors"
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
@@ -226,16 +222,31 @@ func (ts MulTS) DepVars(from, to int) ([][]float64, error) {
 }
 
 // IndepVars returns a matrix containing the independent variables
-func (ts MulTS) IndepVars(from, to int) (*mat.Dense, error) {
+func (ts MulTS) IndepVars(from, to int) ([][]float64, error) {
 	if ts.data == nil {
 		return nil, errors.New("no data")
 	}
-	if len(ts.indep) == 0 {
+	if len(ts.indep)+ts.lag*len(ts.dep) == 0 {
 		return nil, errors.New("no independent variable")
 	}
-	if from < 0 || from > to || to >= ts.iTT {
+	if from-ts.lag < 0 || from > to || to >= ts.iTT {
 		return nil, errors.New("invalid from or to")
 	}
 
-	return nil, nil
+	var indep = [][]float64{}
+	var tmp [][]float64
+	for k := 1; k <= ts.lag; k++ {
+		// DepVars copies the values
+		tmp, _ = ts.DepVars(from-k, to-k)
+		indep = append(indep, tmp...)
+	}
+
+	var tmpp []float64
+	for _, v := range ts.indep {
+		tmpp = make([]float64, to-from)
+		copy(tmpp, ts.data[v][from:to])
+		indep = append(indep, tmpp)
+	}
+
+	return indep, nil
 }
