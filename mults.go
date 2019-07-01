@@ -116,19 +116,18 @@ func (ts *MulTS) SetLag(k int) error {
 }
 
 // SetDepByCol sets dependent variables by column numbers
-func (ts *MulTS) SetDepByCol(deps []int, app bool) error {
-	var nvar = len(ts.data)
+func (ts *MulTS) SetDepByCol(app bool, deps ...int) error {
 	if !app {
 		// not append
 		ts.dep = []int{}
 	}
 
-	for dep := range deps {
-		if dep < 0 || dep >= nvar {
+	for _, dep := range deps {
+		if dep < 0 || dep >= len(ts.data) {
 			continue
 		}
 
-		if !containsint(ts.dep, dep) {
+		if !contains(ts.dep, dep) {
 			ts.dep = append(ts.dep, dep)
 		}
 	}
@@ -137,7 +136,7 @@ func (ts *MulTS) SetDepByCol(deps []int, app bool) error {
 }
 
 // SetDepByName appends dependent variables by variable names
-func (ts *MulTS) SetDepByName(deps []string, app bool) error {
+func (ts *MulTS) SetDepByName(app bool, deps ...string) error {
 	if ts.vnames == nil {
 		return errors.New("variables have no names")
 	}
@@ -147,32 +146,34 @@ func (ts *MulTS) SetDepByName(deps []string, app bool) error {
 		ts.dep = []int{}
 	}
 
+	var tmp []int
 	for _, dep := range deps {
-		for _, v := range ts.dep {
-			if dep == ts.vnames[v] && !containsint(ts.dep, v) {
-				ts.dep = append(ts.dep, v)
+		for i, v := range ts.vnames {
+			if dep == v {
+				tmp = append(tmp, i)
 				break
 			}
 		}
 	}
 
+	ts.SetDepByCol(app, tmp...)
+
 	return nil
 }
 
 // SetIndepByCol sets independent variables by column numbers
-func (ts *MulTS) SetIndepByCol(indeps []int, app bool) error {
-	var nvar = len(ts.data)
+func (ts *MulTS) SetIndepByCol(app bool, indeps ...int) error {
 	if !app {
 		// not append
 		ts.indep = []int{}
 	}
 
-	for indep := range indeps {
-		if indep < 0 || indep >= nvar {
+	for _, indep := range indeps {
+		if indep < 0 || indep >= len(ts.data) {
 			continue
 		}
 
-		if !containsint(ts.indep, indep) {
+		if !contains(ts.indep, indep) {
 			ts.indep = append(ts.indep, indep)
 		}
 	}
@@ -181,7 +182,7 @@ func (ts *MulTS) SetIndepByCol(indeps []int, app bool) error {
 }
 
 // SetIndepByName appends independent variables by variable names
-func (ts *MulTS) SetIndepByName(indeps []string, app bool) error {
+func (ts *MulTS) SetIndepByName(app bool, indeps ...string) error {
 	if ts.vnames == nil {
 		return errors.New("variables have no names")
 	}
@@ -191,14 +192,17 @@ func (ts *MulTS) SetIndepByName(indeps []string, app bool) error {
 		ts.indep = []int{}
 	}
 
+	var tmp []int
 	for _, indep := range indeps {
-		for _, v := range ts.indep {
-			if indep == ts.vnames[v] && !containsint(ts.indep, v) {
-				ts.indep = append(ts.indep, v)
+		for i, v := range ts.vnames {
+			if indep == v {
+				tmp = append(tmp, i)
 				break
 			}
 		}
 	}
+
+	ts.SetIndepByCol(app, tmp...)
 
 	return nil
 }
@@ -229,7 +233,7 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	if len(ts.indep)+ts.lag*len(ts.dep) == 0 {
 		return nil, errors.New("no independent variable")
 	}
-	if from-ts.lag < 0 || from > to || to >= ts.iTT {
+	if from-ts.lag < 0 || from > to || to > ts.iTT {
 		return nil, errors.New("invalid from or to")
 	}
 

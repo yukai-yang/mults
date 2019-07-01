@@ -35,7 +35,7 @@ func makerowsrev(rows [][]int, end []int, iTT, freq int) {
 
 }
 
-func containsint(xs []int, x int) bool {
+func contains(xs []int, x int) bool {
 	for _, v := range xs {
 		if x == v {
 			return true
