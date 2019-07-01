@@ -1,5 +1,11 @@
 package mults
 
+import (
+	"fmt"
+
+	"gonum.org/v1/gonum/mat"
+)
+
 /* utility functions */
 
 func makerows(rows [][]int, start []int, iTT, freq int) {
@@ -48,4 +54,18 @@ func depvars(ts *MulTS, from, to int) []float64 {
 		dep = append(dep, tmp...)
 	}
 	return dep
+}
+
+// ViewMatrix prints the matrix
+func ViewMatrix(m mat.Matrix) string {
+	var r, c = m.Dims()
+	var str string
+	for i := 0; i < r; i++ {
+		for j := 0; j < c; j++ {
+			str = str + fmt.Sprintf("%v ", m.At(i, j))
+		}
+		str = str + "\n"
+	}
+
+	return str
 }
