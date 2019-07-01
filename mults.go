@@ -254,3 +254,9 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 
 	return den.T(), nil
 }
+
+// PossibleFrame returns the possible time frame from and to with the largest sample size
+func (ts *MulTS) PossibleFrame() (int, int) {
+	var from, to int
+	return from, to
+}
