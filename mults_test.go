@@ -30,7 +30,7 @@ func TestMulTS(t *testing.T) {
 	mults.SetDepByName(true, "V1")
 
 	mults.SetIndepByCol(false, 2, 0)
-	mults.SetIndepByName(true, "V3", 1)
+	mults.SetIndepByName(true, "V3", 2)
 
 	var dep, _ = mults.DepVars(2, 10)
 	fmt.Println(ViewMatrix(dep))
