@@ -10,7 +10,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"mults"
+	"github.com/yukai-yang/mults"
 )
 
 func main() {
