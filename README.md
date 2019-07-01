@@ -9,8 +9,8 @@ package main
 
 import (
 	"fmt"
-    "math/rand"
-    "github.com/yukai-yang/mults"
+	"math/rand"
+	"mults"
 )
 
 func main() {
@@ -32,8 +32,8 @@ func main() {
 	ts.SetIndepByName(true, "V3", 2)
 
 	var dep, _ = ts.DepVars(2, 10)
-	fmt.Println(mul.ViewMatrix(dep))
+	fmt.Println(mults.ViewMatrix(dep))
 	var indep, _ = ts.IndepVars(2, 10)
-	fmt.Println(mul.ViewMatrix(indep))
+	fmt.Println(mults.ViewMatrix(indep))
 }
 ```
