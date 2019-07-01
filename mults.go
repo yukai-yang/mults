@@ -1,6 +1,10 @@
 package mults
 
-import "errors"
+import (
+	"errors"
+
+	"gonum.org/v1/gonum/mat"
+)
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
@@ -199,9 +203,9 @@ func (ts *MulTS) SetIndepByName(indeps []string, app bool) error {
 	return nil
 }
 
-// DepVars returns a matrix containing the dependent variables
+// DepVars returns (copies) a matrix containing the dependent variables
 // subset from "from" to but without "to"
-func (ts MulTS) DepVars(from, to int) ([][]float64, error) {
+func (ts *MulTS) DepVars(from, to int) (mat.Matrix, error) {
 	if ts.data == nil {
 		return nil, errors.New("no data")
 	}
@@ -212,17 +216,13 @@ func (ts MulTS) DepVars(from, to int) ([][]float64, error) {
 		return nil, errors.New("invalid from or to")
 	}
 
-	var dep = make([][]float64, len(ts.dep))
-	for i, v := range ts.dep {
-		dep[i] = make([]float64, to-from)
-		copy(dep[i], ts.data[v][from:to])
-	}
+	den := mat.NewDense(len(ts.dep), to-from, depvars(ts, from, to))
 
-	return dep, nil
+	return den.T(), nil
 }
 
 // IndepVars returns a matrix containing the independent variables
-func (ts MulTS) IndepVars(from, to int) ([][]float64, error) {
+func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	if ts.data == nil {
 		return nil, errors.New("no data")
 	}
@@ -233,20 +233,20 @@ func (ts MulTS) IndepVars(from, to int) ([][]float64, error) {
 		return nil, errors.New("invalid from or to")
 	}
 
-	var indep = [][]float64{}
-	var tmp [][]float64
+	var indep = []float64{}
 	for k := 1; k <= ts.lag; k++ {
-		// DepVars copies the values
-		tmp, _ = ts.DepVars(from-k, to-k)
+		// depvars copies the values
+		indep = append(indep, depvars(ts, from-k, to-k)...)
+	}
+
+	var tmp []float64
+	for _, v := range ts.indep {
+		tmp = make([]float64, to-from)
+		copy(tmp, ts.data[v][from:to])
 		indep = append(indep, tmp...)
 	}
 
-	var tmpp []float64
-	for _, v := range ts.indep {
-		tmpp = make([]float64, to-from)
-		copy(tmpp, ts.data[v][from:to])
-		indep = append(indep, tmpp)
-	}
+	den := mat.NewDense(len(ts.indep)+ts.lag*len(ts.dep), to-from, indep)
 
-	return indep, nil
+	return den.T(), nil
 }

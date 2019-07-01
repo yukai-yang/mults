@@ -37,3 +37,15 @@ func containsint(xs []int, x int) bool {
 	}
 	return false
 }
+
+// make a copy to the origin
+func depvars(ts *MulTS, from, to int) []float64 {
+	var dep = []float64{}
+	var tmp []float64
+	for _, v := range ts.dep {
+		tmp = make([]float64, to-from)
+		copy(tmp, ts.data[v][from:to])
+		dep = append(dep, tmp...)
+	}
+	return dep
+}
