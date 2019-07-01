@@ -1,6 +1,10 @@
 package mults
 
-import "errors"
+import (
+	"errors"
+
+	"gonum.org/v1/gonum/mat"
+)
 
 // MulTS is a struct for the multivariate time series
 type MulTS struct {
@@ -196,5 +200,15 @@ func (ts *MulTS) SetIndepByName(indeps []string, app bool) error {
 		}
 	}
 
+	return nil
+}
+
+// DepVars returns a matrix containing the dependent variables
+func (ts MulTS) DepVars() *mat.Dense {
+	return nil
+}
+
+// IndepVars returns a matrix containing the independent variables
+func (ts MulTS) IndepVars() *mat.Dense {
 	return nil
 }
