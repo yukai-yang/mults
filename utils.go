@@ -44,6 +44,15 @@ func contains(xs []int, x int) bool {
 	return false
 }
 
+func containpair(xs [][]int, x []int) bool {
+	for _, v := range xs {
+		if x[0] == v[0] && x[1] == v[1] {
+			return true
+		}
+	}
+	return false
+}
+
 // make a copy to the origin
 func depvars(ts *MulTS, from, to int) []float64 {
 	var dep = []float64{}

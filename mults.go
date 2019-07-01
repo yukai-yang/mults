@@ -14,8 +14,8 @@ type MulTS struct {
 	rows   [][]int     // SetFreq
 	vnames []string    // SetData, SetNames
 	lag    int         // SetLag
-	dep    []int       // SetDepByCol, SetDepByName
-	indep  []int       // SetIndepByCol, SetIndepByName
+	dep    []int       // SetData, SetDepByCol, SetDepByName
+	indep  [][]int     // SetData, SetIndepByCol, SetIndepByName
 }
 
 // SetData sets the data, start, end and frequency
@@ -38,7 +38,7 @@ func (ts *MulTS) SetData(data []float64, nvar int, vnames []string) error {
 		copy(ts.vnames, vnames)
 	}
 	ts.dep = []int{}
-	ts.indep = []int{}
+	ts.indep = [][]int{}
 
 	return nil
 }
@@ -141,11 +141,6 @@ func (ts *MulTS) SetDepByName(app bool, deps ...string) error {
 		return errors.New("variables have no names")
 	}
 
-	if !app {
-		// not append
-		ts.dep = []int{}
-	}
-
 	var tmp []int
 	for _, dep := range deps {
 		for i, v := range ts.vnames {
@@ -162,47 +157,42 @@ func (ts *MulTS) SetDepByName(app bool, deps ...string) error {
 }
 
 // SetIndepByCol sets independent variables by column numbers
-func (ts *MulTS) SetIndepByCol(app bool, indeps ...int) error {
-	if !app {
-		// not append
-		ts.indep = []int{}
+func (ts *MulTS) SetIndepByCol(app bool, indep int, lag int) error {
+	if indep < 0 || indep >= len(ts.data) {
+		return errors.New("invalid column number")
+	}
+	if lag < 0 || lag >= ts.iTT {
+		return errors.New("invalid lag")
 	}
 
-	for _, indep := range indeps {
-		if indep < 0 || indep >= len(ts.data) {
-			continue
-		}
+	if !app {
+		// not append
+		ts.indep = [][]int{}
+	}
 
-		if !contains(ts.indep, indep) {
-			ts.indep = append(ts.indep, indep)
-		}
+	var tmp = []int{indep, lag}
+	if !containpair(ts.indep, tmp) {
+		ts.indep = append(ts.indep, tmp)
 	}
 
 	return nil
 }
 
 // SetIndepByName appends independent variables by variable names
-func (ts *MulTS) SetIndepByName(app bool, indeps ...string) error {
+func (ts *MulTS) SetIndepByName(app bool, indep string, lag int) error {
 	if ts.vnames == nil {
 		return errors.New("variables have no names")
 	}
-
-	if !app {
-		// not append
-		ts.indep = []int{}
+	if lag < 0 || lag >= ts.iTT {
+		return errors.New("invalid lag")
 	}
 
-	var tmp []int
-	for _, indep := range indeps {
-		for i, v := range ts.vnames {
-			if indep == v {
-				tmp = append(tmp, i)
-				break
-			}
+	for i, v := range ts.vnames {
+		if indep == v {
+			ts.SetIndepByCol(app, i, lag)
+			break
 		}
 	}
-
-	ts.SetIndepByCol(app, tmp...)
 
 	return nil
 }
@@ -216,7 +206,8 @@ func (ts *MulTS) DepVars(from, to int) (mat.Matrix, error) {
 	if len(ts.dep) == 0 {
 		return nil, errors.New("no dependent variable")
 	}
-	if from < 0 || from >= to || to > ts.iTT {
+	mfrom, mto := ts.PossibleFrame()
+	if from < mfrom || from >= to || to > mto {
 		return nil, errors.New("invalid from or to")
 	}
 
@@ -233,7 +224,8 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	if len(ts.indep)+ts.lag*len(ts.dep) == 0 {
 		return nil, errors.New("no independent variable")
 	}
-	if from-ts.lag < 0 || from > to || to > ts.iTT {
+	mfrom, mto := ts.PossibleFrame()
+	if from < mfrom || from >= to || to > mto {
 		return nil, errors.New("invalid from or to")
 	}
 
@@ -246,7 +238,7 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	var tmp []float64
 	for _, v := range ts.indep {
 		tmp = make([]float64, to-from)
-		copy(tmp, ts.data[v][from:to])
+		copy(tmp, ts.data[v[0]][(from-v[1]):(to-v[1])])
 		indep = append(indep, tmp...)
 	}
 
@@ -257,6 +249,11 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 
 // PossibleFrame returns the possible time frame from and to with the largest sample size
 func (ts *MulTS) PossibleFrame() (int, int) {
-	var from, to int
-	return from, to
+	var from = ts.lag
+	for _, v := range ts.indep {
+		if v[1] > from {
+			from = v[1]
+		}
+	}
+	return from, ts.iTT
 }
