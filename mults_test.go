@@ -24,7 +24,7 @@ func TestMulTS(t *testing.T) {
 	mults.SetData(data, 4, nil)
 	mults.SetFreq(4, nil, nil)
 	mults.SetNames([]string{"V0", "V1", "V2", "V3"})
-	mults.SetLag(2)
+	mults.SetLag(false, 2)
 
 	mults.SetDepByCol(false, 0)
 	mults.SetDepByName(true, "V1")

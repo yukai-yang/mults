@@ -14,7 +14,6 @@ type MulTS struct {
 	freq   int         // SetFreq
 	rows   [][]int     // SetFreq
 	vnames []string    // SetData, SetNames
-	lag    int         // SetLag
 	dep    []int       // SetData, SetDepByCol, SetDepByName
 	indep  [][]int     // SetData, SetIndepByCol, SetIndepByName
 }
@@ -106,16 +105,6 @@ func (ts *MulTS) SetFreq(freq int, start, end []int) error {
 	return nil
 }
 
-// SetLag sets the lag length
-func (ts *MulTS) SetLag(k int) error {
-	if k < 0 || k >= ts.iTT {
-		return errors.New("invalid lag length")
-	}
-	ts.lag = k
-
-	return nil
-}
-
 // SetDepByCol sets dependent variables by column numbers
 func (ts *MulTS) SetDepByCol(app bool, deps ...int) error {
 	if !app {
@@ -153,6 +142,31 @@ func (ts *MulTS) SetDepByName(app bool, deps ...string) error {
 	}
 
 	ts.SetDepByCol(app, tmp...)
+
+	return nil
+}
+
+// SetLag sets the lag length
+func (ts *MulTS) SetLag(app bool, k int) error {
+	if ts.data == nil {
+		return errors.New("no data")
+	}
+	if len(ts.dep) == 0 {
+		return errors.New("no dependent variable")
+	}
+	if k < 0 || k >= ts.iTT {
+		return errors.New("invalid lag length")
+	}
+	if !app {
+		// not append
+		ts.indep = [][]int{}
+	}
+
+	for _, tmp := range ts.dep {
+		for i := 1; i <= k; i++ {
+			ts.SetIndepByCol(true, tmp, i)
+		}
+	}
 
 	return nil
 }
@@ -222,7 +236,7 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	if ts.data == nil {
 		return nil, errors.New("no data")
 	}
-	if len(ts.indep)+ts.lag*len(ts.dep) == 0 {
+	if len(ts.indep) == 0 {
 		return nil, errors.New("no independent variable")
 	}
 	mfrom, mto := ts.PossibleFrame()
@@ -231,11 +245,6 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 	}
 
 	var indep = []float64{}
-	for k := 1; k <= ts.lag; k++ {
-		// depvars copies the values
-		indep = append(indep, depvars(ts, from-k, to-k)...)
-	}
-
 	var tmp []float64
 	for _, v := range ts.indep {
 		tmp = make([]float64, to-from)
@@ -243,14 +252,14 @@ func (ts *MulTS) IndepVars(from, to int) (mat.Matrix, error) {
 		indep = append(indep, tmp...)
 	}
 
-	den := mat.NewDense(len(ts.indep)+ts.lag*len(ts.dep), to-from, indep)
+	var den = mat.NewDense(len(ts.indep), to-from, indep)
 
 	return den.T(), nil
 }
 
 // PossibleFrame returns the possible time frame from and to with the largest sample size
 func (ts *MulTS) PossibleFrame() (int, int) {
-	var from = ts.lag
+	var from = 0
 	for _, v := range ts.indep {
 		if v[1] > from {
 			from = v[1]
